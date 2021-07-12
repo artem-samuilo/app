@@ -1,5 +1,5 @@
 pipeline{
-    options {
+  options {
         skipDefaultCheckout true
     }
 
@@ -17,16 +17,16 @@ pipeline{
     }
 
     stages{
-        stage("Checkout to target branch"){
+      stage("Checkout to target branch"){
             steps{
-                    checkout([$class: 'GitSCM', branches: [[ name: "${BRANCH}" ]], extensions : [[ $class: 'RelativeTargetDirectory', relativeTargetDir: "${BRANCH}" ]], userRemoteConfigs: [[credentialsId: 'WORK_PC', url: 'git@github.com:artem-samuilo/Task_Definition.git']]])
+                    checkout([$class: 'GitSCM', branches: [[ name: "*/${BRANCH}" ]], extensions : [[ $class: 'RelativeTargetDirectory', relativeTargetDir: "${BRANCH}" ]], userRemoteConfigs: [[credentialsId: 'WORK_PC', url: 'git@github.com:artem-samuilo/app-service.git']]])
                 }
             }
     
             
         stage("Get current Task Definition"){
             steps{
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh "aws ecs describe-services --service ${params.ECS_SERVICE} --cluster ${params.ECS_CLUSTER} --region ${params.REGION}"
                     sh "aws ecs describe-task-definition --task-definition ${params.FAMILY}:${params.REVISION} --region ${params.REGION}"
                 }
@@ -39,7 +39,7 @@ pipeline{
                 }
             }
             steps{
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh "aws ecs register-task-definition --region ${params.REGION} --family ${params.FAMILY} --cli-input-json file://${params.PATH}"
                 }
             }
@@ -51,7 +51,7 @@ pipeline{
                 }
             }
             steps{
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh "aws ecs update-service --region ${params.REGION} --cluster ${params.ECS_CLUSTER} --service ${params.ECS_SERVICE} --task-definition ${params.TASK_DEFINITION}:${params.NEW_REVISION} --force-new-deployment"
                 }
             }
