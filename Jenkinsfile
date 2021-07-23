@@ -1,5 +1,5 @@
 pipeline{
-  options {
+    options {
         skipDefaultCheckout true
     }
 
@@ -16,12 +16,17 @@ pipeline{
         booleanParam(name:'UPDATE_SERVICE', defaultValue: false, description: 'Update ECS service?')
     }
 
-    stages{
-      stage("Checkout to target branch"){
+    stages{  
+        stage("Checkout to target branch"){
             steps{
-                    checkout([$class: 'GitSCM', branches: [[ name: "*/${BRANCH}" ]], extensions : [[ $class: 'RelativeTargetDirectory', relativeTargetDir: "${BRANCH}" ]], userRemoteConfigs: [[credentialsId: 'WORK_PC', url: 'git@github.com:artem-samuilo/app-service.git']]])
+                dir("${params.BRANCH}-${BUILD_NUMBER}"){
+                    checkout([
+                        $class: 'GitSCM', branches: [[ name: "refs/heads/${params.BRANCH}" ]], 
+                        userRemoteConfigs: [[name: 'app', credentialsId: 'WORK_PC', url: 'git@github.com:artem-samuilo/app.git']]
+                    ])
                 }
             }
+        }
     
             
         stage("Get current Task Definition"){
