@@ -1,8 +1,17 @@
 pipeline{
     agent any
+
+    options {
+        skipDefaultCheckout true
+    }
+
+    triggers {
+        cron '@daily'
+    }
+
     parameters{
         string(defaultValue: 'eu-central-1', name: 'REGION')
-        string(name: 'DOCKER_TAG')
+        string(defaultValue: 'latest', name: 'DOCKER_TAG')
         string(defaultValue: 'master',name: 'BRANCH')
     }
 
@@ -18,17 +27,19 @@ pipeline{
 
         stage("Docker build"){
             steps{
-                dir('frontend') {
+                dir("${params.BRANCH}-${BUILD_NUMBER}/frontend") {
                     sh "docker build -t 738757238296.dkr.ecr.eu-central-1.amazonaws.com/frontend:${params.DOCKER_TAG} ."
                 } 
                 }
             }
         stage("Docker push"){
             steps{
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh "aws ecr get-login-password --region ${params.REGION} | docker login --username AWS --password-stdin 738757238296.dkr.ecr.eu-central-1.amazonaws.com"
-                    sh "docker push 738757238296.dkr.ecr.eu-central-1.amazonaws.com/frontend:${params.DOCKER_TAG}"    
+                dir("${params.BRANCH}-${BUILD_NUMBER}/frontend") {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh "aws ecr get-login-password --region ${params.REGION} | docker login --username AWS --password-stdin 738757238296.dkr.ecr.eu-central-1.amazonaws.com"
+                        sh "docker push 738757238296.dkr.ecr.eu-central-1.amazonaws.com/frontend:${params.DOCKER_TAG}"    
                 }
+            }
             }
 
         }
