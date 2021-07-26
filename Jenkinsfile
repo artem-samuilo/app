@@ -20,10 +20,7 @@ pipeline{
         stage("Checkout to target branch"){
             steps{
                 dir("${params.BRANCH}-${BUILD_NUMBER}"){
-                    checkout([
-                        $class: 'GitSCM', branches: [[ name: "refs/heads/${params.BRANCH}" ]], 
-                        userRemoteConfigs: [[name: 'app', credentialsId: 'WORK_PC', url: 'git@github.com:artem-samuilo/app.git']]
-                    ])
+                    git url: "git@github.com:artem-samuilo/app.git", credentialsId: "WORK_PC", branch: "${params.BRANCH}", poll: true
                 }
             }
         }

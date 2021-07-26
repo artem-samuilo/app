@@ -3,19 +3,9 @@ pipeline{
     parameters{
         string(defaultValue: 'eu-central-1', name: 'REGION')
         string(name: 'DOCKER_TAG')
-        string(defaultValue: 'master',name: 'BRANCH')
     }
 
     stages{
-        stage("Checkout to target branch"){
-            steps{
-                dir("${params.BRANCH}-${BUILD_NUMBER}"){
-                    git url: "git@github.com:artem-samuilo/app.git", credentialsId: "WORK_PC", branch: "${params.BRANCH}", poll: true
-                }
-            }
-        }
-
-
         stage("Docker build"){
             steps{
                 dir('frontend') {
