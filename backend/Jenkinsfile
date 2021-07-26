@@ -1,23 +1,43 @@
 pipeline{
     agent any
+
+    options {
+        skipDefaultCheckout true
+    }
+
+    triggers {
+        cron '@daily'
+    }
+
     parameters{
         string(defaultValue: 'eu-central-1', name: 'REGION')
-        string(name: 'DOCKER_TAG')
+        string(defaultValue: 'latest', name: 'DOCKER_TAG')
+        string(defaultValue: 'master',name: 'BRANCH')
     }
 
     stages{
+        stage("Checkout to target branch"){
+            steps{
+                dir("${params.BRANCH}-${BUILD_NUMBER}"){
+                    git url: "git@github.com:artem-samuilo/app.git", credentialsId: "WORK_PC", branch: "${params.BRANCH}", poll: true
+                }
+            }
+        }
+
         stage("Docker build"){
             steps{
-                dir('backend') {
+                dir("${params.BRANCH}-${BUILD_NUMBER}/backend") {
                      sh "docker build -t 738757238296.dkr.ecr.eu-central-1.amazonaws.com/backend:${params.DOCKER_TAG} ."
                 } 
                 }
             }
         stage("Docker push"){
             steps{
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh "aws ecr get-login-password --region ${params.REGION} | docker login --username AWS --password-stdin 738757238296.dkr.ecr.eu-central-1.amazonaws.com"
-                    sh "docker push 738757238296.dkr.ecr.eu-central-1.amazonaws.com/backend:${params.DOCKER_TAG}"    
+                dir("${params.BRANCH}-${BUILD_NUMBER}/backend") {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh "aws ecr get-login-password --region ${params.REGION} | docker login --username AWS --password-stdin 738757238296.dkr.ecr.eu-central-1.amazonaws.com"
+                        sh "docker push 738757238296.dkr.ecr.eu-central-1.amazonaws.com/backend:${params.DOCKER_TAG}"    
+                    }
                 }
             }
 
