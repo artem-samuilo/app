@@ -54,7 +54,7 @@ pipeline{
             }
             steps{
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS_KEYS', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh "aws ecs update-service --region ${params.REGION} --cluster ${params.ECS_CLUSTER} --service ${params.ECS_SERVICE} --task-definition ${params.TASK_DEFINITION}:${params.NEW_REVISION} --force-new-deployment"
+                    sh "aws ecs update-service --region ${params.REGION} --cluster ${params.ECS_CLUSTER} --service ${params.ECS_SERVICE} --task-definition ${params.TASK_DEFINITION}:${params.NEW_REVISION} --force-new-deployment --health-check-grace-period-seconds 180"
                 }
             }
 
