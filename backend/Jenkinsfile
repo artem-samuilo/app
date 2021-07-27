@@ -31,6 +31,20 @@ pipeline{
                 } 
                 }
             }
+
+        stage("Test docker image"){
+            agent {
+                docker {
+                    image 'docker run 738757238296.dkr.ecr.eu-central-1.amazonaws.com/backend:${params.DOCKER_TAG}'
+                    // Run the container on the node specified at the top-level of the Pipeline, in the same workspace, rather than on a new node entirely:
+                    reuseNode true
+                }
+            steps{
+                    sh "curl -I localhost:5000/index"
+                }
+            }
+        }
+
         stage("Docker push"){
             steps{
                 dir("${params.BRANCH}-${BUILD_NUMBER}/backend") {
